@@ -7,30 +7,36 @@ function App() {
   const [result, setResult] = useState('');
 
   const generateSchedule = () => {
-    const taskList = tasks.split('\n').filter(t => t.trim() !== '');
-    const blocks = Math.floor((time * 60) / focusTime);
-    let schedule = '';
-    let hour = 9;
-    let minute = 0;
-    let taskIndex = 0;
+  if (focusTime <= 0) {
+    alert("집중 시간 단위는 1분 이상이어야 합니다.");
+    return;
+  }
 
-    for (let i = 0; i < blocks; i++) {
-      const task = taskList[taskIndex % taskList.length];
-      const start = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+  const taskList = tasks.split('\n').filter(t => t.trim() !== '');
+  const blocks = Math.floor((time * 60) / focusTime);
+  let schedule = '';
+  let hour = 9;
+  let minute = 0;
+  let taskIndex = 0;
 
-      minute += focusTime;
-      if (minute >= 60) {
-        hour += Math.floor(minute / 60);
-        minute %= 60;
-      }
+  for (let i = 0; i < blocks; i++) {
+    const task = taskList[taskIndex % taskList.length];
+    const start = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 
-      const end = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-      schedule += `${start} ~ ${end} : ${task}\n`;
-      taskIndex++;
+    minute += focusTime;
+    if (minute >= 60) {
+      hour += Math.floor(minute / 60);
+      minute %= 60;
     }
 
-    setResult(schedule);
-  };
+    const end = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+    schedule += `${start} ~ ${end} : ${task}\n`;
+    taskIndex++;
+  }
+
+  setResult(schedule);
+};
+
 
   return (
     <main style={{ maxWidth: 600, margin: 'auto', padding: 20 }}>
