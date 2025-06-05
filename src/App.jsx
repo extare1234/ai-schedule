@@ -1,19 +1,35 @@
 import { useState } from 'react';
 
+function parseFocusTime(input) {
+  const cleaned = input.trim().replace(/\s/g, '');
+
+  if (cleaned.endsWith('시간')) {
+    const num = parseFloat(cleaned.replace('시간', ''));
+    return Math.round(num * 60);
+  }
+
+  if (cleaned.endsWith('분')) {
+    return parseInt(cleaned.replace('분', ''), 10);
+  }
+
+  return parseInt(cleaned, 10); // 숫자만 있는 경우
+}
+
 function App() {
-  const [time, setTime] = useState(3); // 총 시간 (시간 단위)
-  const [tasks, setTasks] = useState(''); // 할 일 목록 (줄바꿈 기준)
-  const [focusTime, setFocusTime] = useState(25); // 집중 시간 단위 (분)
+  const [time, setTime] = useState(3);
+  const [tasks, setTasks] = useState('');
+  const [focusTime, setFocusTime] = useState('25');  // 문자열로 받음
   const [result, setResult] = useState('');
 
   const generateSchedule = () => {
-    if (focusTime <= 0) {
-      alert("집중 시간 단위는 1분 이상이어야 합니다.");
+    const parsedFocusTime = parseFocusTime(focusTime);
+    if (isNaN(parsedFocusTime) || parsedFocusTime <= 0) {
+      alert("집중 시간 단위를 올바르게 입력해주세요. (예: 90, 1.5시간, 45분)");
       return;
     }
 
     const taskList = tasks.split('\n').filter(t => t.trim() !== '');
-    const blocks = Math.floor((time * 60) / focusTime); // 총 블록 수 (분 단위로 환산 후 나눔)
+    const blocks = Math.floor((time * 60) / parsedFocusTime);
     let schedule = '';
     let hour = 9;
     let minute = 0;
@@ -23,10 +39,10 @@ function App() {
       const task = taskList[taskIndex % taskList.length];
       const start = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 
-      minute += focusTime;
-      while (minute >= 60) {
-        hour += 1;
-        minute -= 60;
+      minute += parsedFocusTime;
+      if (minute >= 60) {
+        hour += Math.floor(minute / 60);
+        minute %= 60;
       }
 
       const end = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
@@ -43,32 +59,17 @@ function App() {
 
       <div style={{ marginBottom: 20 }}>
         <label>오늘 남은 시간 (시간 단위)</label>
-        <input
-          type="number"
-          value={time}
-          onChange={(e) => setTime(Number(e.target.value))}
-          min={0.5}
-          step={0.5}
-        />
+        <input type="number" value={time} onChange={(e) => setTime(Number(e.target.value))} />
       </div>
 
       <div style={{ marginBottom: 20 }}>
         <label>할 일 목록 (한 줄에 하나씩)</label>
-        <textarea
-          rows={5}
-          value={tasks}
-          onChange={(e) => setTasks(e.target.value)}
-        />
+        <textarea rows={5} value={tasks} onChange={(e) => setTasks(e.target.value)} />
       </div>
 
       <div style={{ marginBottom: 20 }}>
-        <label>집중 시간 단위 (분)</label>
-        <input
-          type="number"
-          value={focusTime}
-          onChange={(e) => setFocusTime(Number(e.target.value))}
-          min={1}
-        />
+        <label>집중 시간 단위 (예: 25, 90분, 2시간)</label>
+        <input type="text" value={focusTime} onChange={(e) => setFocusTime(e.target.value)} />
       </div>
 
       <button onClick={generateSchedule}>일정 생성하기</button>
